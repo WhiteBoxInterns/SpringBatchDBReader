@@ -54,8 +54,8 @@ public class ColumnRangePartitioner implements Partitioner {
      */
     @Override
     public Map<String, ExecutionContext> partition(int gridSize) {
-        int min = jdbcTemplate.queryForObject("SELECT MIN(" + column + ") from " + table, Integer.class);
-        int max = jdbcTemplate.queryForObject("SELECT MAX(" + column + ") from " + table, Integer.class);
+        int min = 1;
+        int max = jdbcTemplate.queryForObject("SELECT COUNT(" + column + ") from " + table, Integer.class);
         int targetSize = (max - min) / gridSize + 1;
 
         Map<String, ExecutionContext> result = new HashMap<String, ExecutionContext>();

@@ -1,8 +1,8 @@
 package demo.batch.configuration;
 
+import demo.batch.domain.Ratings;
 import demo.batch.infrastructure.ColumnRangePartitioner;
-import demo.batch.infrastructure.Customer;
-import demo.batch.infrastructure.CustomerRowMapper;
+import demo.batch.infrastructure.RatingsRowMapper;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -19,7 +19,6 @@ import org.springframework.batch.integration.partition.StepExecutionRequestHandl
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
-import org.springframework.batch.item.database.PagingQueryProvider;
 import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,9 +74,9 @@ public class BatchConfiguration implements ApplicationContextAware {
     public ColumnRangePartitioner partitioner() {
         ColumnRangePartitioner columnRangePartitioner = new ColumnRangePartitioner();
 
-        columnRangePartitioner.setColumn("id");
+        columnRangePartitioner.setColumn("tconst");
         columnRangePartitioner.setDataSource(this.dataSource);
-        columnRangePartitioner.setTable("customer");
+        columnRangePartitioner.setTable("ratings");
 
         return columnRangePartitioner;
     }
@@ -103,26 +102,21 @@ public class BatchConfiguration implements ApplicationContextAware {
     }
     @Bean
     @StepScope
-    public JdbcPagingItemReader<Customer> pagingItemReader(
+    public JdbcPagingItemReader<Ratings> pagingItemReader(
             @Value("#{stepExecutionContext['minValue']}")Long minValue,
             @Value("#{stepExecutionContext['maxValue']}")Long maxValue) {
         System.out.println("reading " + minValue + " to " + maxValue);
-        JdbcPagingItemReader<Customer> reader = new JdbcPagingItemReader<>();
+        JdbcPagingItemReader<Ratings> reader = new JdbcPagingItemReader<>();
 
         reader.setDataSource(this.dataSource);
         reader.setFetchSize(250);
-        reader.setRowMapper(new CustomerRowMapper());
+        reader.setRowMapper(new RatingsRowMapper());
 
         MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
-        queryProvider.setSelectClause("id, firstName, lastName, birthdate");
-        queryProvider.setFromClause("from customer");
-        queryProvider.setWhereClause("where id >= " + minValue + " and id <= " + maxValue);
-
-        Map<String, Order> sortKeys = new HashMap<>(1);
-
-        sortKeys.put("id", Order.ASCENDING);
-
-        queryProvider.setSortKeys(sortKeys);
+        queryProvider.setSelectClause("tconst, averageRating, numVotes");
+        queryProvider.setFromClause("from ratings");
+        
+        
 
         reader.setQueryProvider(queryProvider);
 
@@ -130,9 +124,9 @@ public class BatchConfiguration implements ApplicationContextAware {
     }
 
     @Bean
-    public ItemWriter<Customer> writer(){
+    public ItemWriter<Ratings> writer(){
         return items -> {
-            for(Customer item : items){
+            for(Ratings item : items){
                 System.out.println(item);
             }
         };
@@ -149,7 +143,7 @@ public class BatchConfiguration implements ApplicationContextAware {
     @Bean
     public Step slaveStep() {
         return stepBuilderFactory.get("slaveStep")
-                .<Customer, Customer>chunk(250)
+                .<Ratings, Ratings>chunk(250)
                 .reader(pagingItemReader(null, null))
                 .writer(writer())
                 .build();
