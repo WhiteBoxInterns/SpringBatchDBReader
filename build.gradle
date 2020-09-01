@@ -26,7 +26,8 @@ dependencies {
     compile group: 'com.vladmihalcea', name: 'hibernate-types-52', version: '1.0.0'
     compile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '4.0.3.RELEASE'
     compile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '3.0.1.RELEASE'
-    compile 'mysql:mysql-connector-java:8.0.21'}
+    compile 'mysql:mysql-connector-java:8.0.21'
+}
 test {
     useJUnitPlatform()
 }

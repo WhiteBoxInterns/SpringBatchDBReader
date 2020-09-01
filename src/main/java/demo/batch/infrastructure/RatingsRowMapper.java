@@ -8,10 +8,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class RatingsRowMapper implements RowMapper<Ratings> {
-    @Override
-    public Ratings mapRow(ResultSet resultSet, int rowNum) throws SQLException {
-        return new Ratings(resultSet.getString("tconst"),
-                resultSet.getInt("averageRating"),
-                resultSet.getInt("numVotes"));
-    }
+	@Override
+	public Ratings mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+		return new Ratings(resultSet.getString("tconst"),
+			resultSet.getInt("averageRating"),
+			resultSet.getInt("numVotes"));
+	}
 }

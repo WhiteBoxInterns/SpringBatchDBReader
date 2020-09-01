@@ -19,68 +19,68 @@ import org.springframework.messaging.PollableChannel;
 
 @Configuration
 public class IntegrationConfiguration {
-
-    @Bean
-    public MessagingTemplate messageTemplate() {
-        MessagingTemplate messagingTemplate = new MessagingTemplate(outboundRequests());
-
-        messagingTemplate.setReceiveTimeout(60000000l);
-
-        return messagingTemplate;
-    }
-
-    @Bean
-    public DirectChannel outboundRequests() {
-        return new DirectChannel();
-    }
-
-    @Bean
-    @ServiceActivator(inputChannel = "outboundRequests")
-    public AmqpOutboundEndpoint amqpOutboundEndpoint(AmqpTemplate template) {
-        AmqpOutboundEndpoint endpoint = new AmqpOutboundEndpoint(template);
-
-        endpoint.setExpectReply(true);
-        endpoint.setOutputChannel(inboundRequests());
-
-        endpoint.setRoutingKey("partition.requests");
-
-        return endpoint;
-    }
-
-    @Bean
-    public Queue requestQueue() {
-        return new Queue("partition.requests", false);
-    }
-
-    @Bean
-    @Profile("slave")
-    public AmqpInboundChannelAdapter inbound(SimpleMessageListenerContainer listenerContainer) {
-        AmqpInboundChannelAdapter adapter = new AmqpInboundChannelAdapter(listenerContainer);
-
-        adapter.setOutputChannel(inboundRequests());
-
-        adapter.afterPropertiesSet();
-
-        return adapter;
-    }
-
-    @Bean
-    public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory) {
-        SimpleMessageListenerContainer container =
-                new SimpleMessageListenerContainer(connectionFactory);
-        container.setQueueNames("partition.requests");
-        container.setAutoStartup(false);
-
-        return container;
-    }
-
-    @Bean
-    public PollableChannel outboundStaging() {
-        return new NullChannel();
-    }
-
-    @Bean
-    public QueueChannel inboundRequests() {
-        return new QueueChannel();
-    }
+	
+	@Bean
+	public MessagingTemplate messageTemplate() {
+		MessagingTemplate messagingTemplate = new MessagingTemplate(outboundRequests());
+		
+		messagingTemplate.setReceiveTimeout(60000000l);
+		
+		return messagingTemplate;
+	}
+	
+	@Bean
+	public DirectChannel outboundRequests() {
+		return new DirectChannel();
+	}
+	
+	@Bean
+	@ServiceActivator(inputChannel = "outboundRequests")
+	public AmqpOutboundEndpoint amqpOutboundEndpoint(AmqpTemplate template) {
+		AmqpOutboundEndpoint endpoint = new AmqpOutboundEndpoint(template);
+		
+		endpoint.setExpectReply(true);
+		endpoint.setOutputChannel(inboundRequests());
+		
+		endpoint.setRoutingKey("partition.requests");
+		
+		return endpoint;
+	}
+	
+	@Bean
+	public Queue requestQueue() {
+		return new Queue("partition.requests", false);
+	}
+	
+	@Bean
+	@Profile("slave")
+	public AmqpInboundChannelAdapter inbound(SimpleMessageListenerContainer listenerContainer) {
+		AmqpInboundChannelAdapter adapter = new AmqpInboundChannelAdapter(listenerContainer);
+		
+		adapter.setOutputChannel(inboundRequests());
+		
+		adapter.afterPropertiesSet();
+		
+		return adapter;
+	}
+	
+	@Bean
+	public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory) {
+		SimpleMessageListenerContainer container =
+			new SimpleMessageListenerContainer(connectionFactory);
+		container.setQueueNames("partition.requests");
+		container.setAutoStartup(false);
+		
+		return container;
+	}
+	
+	@Bean
+	public PollableChannel outboundStaging() {
+		return new NullChannel();
+	}
+	
+	@Bean
+	public QueueChannel inboundRequests() {
+		return new QueueChannel();
+	}
 }
