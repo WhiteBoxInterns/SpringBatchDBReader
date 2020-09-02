@@ -1,17 +1,23 @@
 package demo.batch.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+
+import javax.persistence.*;
 
 @Entity
 @Table(name = "ratings")
+@Document(indexName = "tconst")
 public class Ratings {
-	@Id
 	@Column(name = "tconst")
+	@Field(name = "id")
+	@Id
 	public String tconst;
+	@Column(name = "averageRating")
+	@Field(name = "averageRating")
 	public int averageRating;
+	@Column(name = "numVotes")
+	@Field(name = "numVotes")
 	public int numVotes;
 	
 	public Ratings() {

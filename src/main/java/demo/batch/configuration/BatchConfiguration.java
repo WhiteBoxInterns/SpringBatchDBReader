@@ -3,6 +3,7 @@ package demo.batch.configuration;
 import demo.batch.domain.Ratings;
 import demo.batch.infrastructure.ColumnRangePartitioner;
 import demo.batch.infrastructure.RatingsRowMapper;
+import demo.batch.esrepository.ESRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -50,6 +51,8 @@ public class BatchConfiguration implements ApplicationContextAware {
 	public JobExplorer jobExplorer;
 	@Autowired
 	public JobRepository jobRepository;
+	@Autowired
+	public ESRepository esRepository;
 	
 	private ApplicationContext applicationContext;
 	
@@ -136,8 +139,8 @@ public class BatchConfiguration implements ApplicationContextAware {
 	@Bean
 	public ItemWriter<Ratings> writer() {
 		return items -> {
-			for (Ratings item : items) {
-				alreadyread++;
+			for(Ratings item: items) {
+				esRepository.save(item);
 				System.out.println(item);
 			}
 		};

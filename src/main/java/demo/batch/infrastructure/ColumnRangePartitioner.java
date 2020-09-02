@@ -74,8 +74,8 @@ public class ColumnRangePartitioner implements Partitioner {
 			if (end >= targetSize) {
 				end = targetSize;
 			}
-			value.putString("minValue", min);
-			value.putString("maxValue", max);
+			value.putString("minValue", "a");
+			value.putString("maxValue", "b");
 			start += targetSize;
 			end += targetSize;
 			number++;
