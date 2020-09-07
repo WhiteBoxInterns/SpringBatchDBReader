@@ -55,32 +55,34 @@ public class ColumnRangePartitioner implements Partitioner {
 	@Override
 	public Map<String, ExecutionContext> partition(int gridSize) {
 		int targetSize = jdbcTemplate.queryForObject("SELECT COUNT(" + column + ") from " + table, Integer.class);
-		targetSize /= gridSize;
-		
+		int chunkSize = targetSize/gridSize + 1;
+
 		Map<String, ExecutionContext> result = new HashMap<String, ExecutionContext>();
 		int number = 0;
 		int start = 0;
-		int end = targetSize - 1;
-		
-		
-		while (start <= targetSize) {
+		int end = chunkSize - 1;
+
+
+		while (start < targetSize) {
 			ExecutionContext value = new ExecutionContext();
 			result.put("partition" + number, value);
-			
-			String min = jdbcTemplate.queryForObject("SELECT " + column + " from " + table + " GROUP BY " + column + " LIMIT " +
-				start + ", " + "1", String.class);
-			String max = jdbcTemplate.queryForObject("SELECT " + column + " from " + table + " GROUP BY " + column + " LIMIT " +
-				end + ", " + "1", String.class);
 			if (end >= targetSize) {
-				end = targetSize;
+				end = targetSize - 1;
 			}
-			value.putString("minValue", "a");
-			value.putString("maxValue", "b");
-			start += targetSize;
-			end += targetSize;
+			System.out.println("start: " + start + " end: " + end + " targetSize: " + targetSize + "chunkSize: " + chunkSize);
+
+			String min = jdbcTemplate.queryForObject("SELECT " + column + " from " + table + " GROUP BY " + column + " LIMIT " +
+					start + ", " + "1", String.class);
+			String max = jdbcTemplate.queryForObject("SELECT " + column + " from " + table + " GROUP BY " + column + " LIMIT " +
+					end + ", " + "1", String.class);
+			System.out.println(min + " " + max);
+			value.putString("minValue", min);
+			value.putString("maxValue", max);
+			start += chunkSize;
+			end += chunkSize;
 			number++;
 		}
-		
+		System.out.println("ajung aici");
 		return result;
 	}
 }
