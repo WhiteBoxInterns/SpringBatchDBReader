@@ -122,7 +122,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 		
 		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
 		queryProvider.setSelectClause("tconst, averageRating, numVotes");
-		queryProvider.setFromClause("from ratings");
+		queryProvider.setFromClause("from crew");
 		queryProvider.setWhereClause("where tconst >= '" + minValue + "' and tconst <= '" + maxValue + "'");
 		Map<String, Order> sortKeys = new HashMap<>(1);
 		
