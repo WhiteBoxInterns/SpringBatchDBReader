@@ -1,5 +1,6 @@
 package demo.batch.infrastructure;
 
+import demo.batch.domain.Crew;
 import demo.batch.domain.Ratings;
 import demo.batch.esrepository.ESRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,8 @@ public class RatingsItemWriter implements ItemWriter {
 	
 	@Override
 	public void writeItems(List<Object> items) throws Exception {
-		for(Object ratings : items)
-		this.esRatingsRepository.save((Ratings)ratings);
+		for(Object crews : items)
+		this.esRatingsRepository.save((Crew)crews);
 		
 	}
 	

@@ -1,7 +1,9 @@
 package demo.batch.configuration;
 
+import demo.batch.domain.Crew;
 import demo.batch.domain.Ratings;
 import demo.batch.infrastructure.ColumnRangePartitioner;
+import demo.batch.infrastructure.CrewRowMapper;
 import demo.batch.infrastructure.RatingsRowMapper;
 import demo.batch.esrepository.ESRepository;
 import org.springframework.batch.core.Job;
@@ -56,7 +58,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 	
 	private ApplicationContext applicationContext;
 	
-	private static final int GRID_SIZE = 4;
+	private static final int GRID_SIZE = 8;
 	
 	private static int alreadyread = 0;
 	
@@ -110,15 +112,15 @@ public class BatchConfiguration implements ApplicationContextAware {
 	
 	@Bean
 	@StepScope
-	public JdbcPagingItemReader<Ratings> pagingItemReader(
+	public JdbcPagingItemReader<Crew> pagingItemReader(
 		@Value("#{stepExecutionContext['minValue']}") String minValue,
 		@Value("#{stepExecutionContext['maxValue']}") String maxValue) {
 		System.out.println("reading " + minValue + " to " + maxValue + "already read: " + alreadyread);
-		JdbcPagingItemReader<Ratings> reader = new JdbcPagingItemReader<>();
+		JdbcPagingItemReader<Crew> reader = new JdbcPagingItemReader<>();
 		
 		reader.setDataSource(this.dataSource);
 		reader.setFetchSize(250);
-		reader.setRowMapper(new RatingsRowMapper());
+		reader.setRowMapper(new CrewRowMapper());
 		
 		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
 		queryProvider.setSelectClause("tconst, writers, directors");
@@ -137,9 +139,9 @@ public class BatchConfiguration implements ApplicationContextAware {
 	}
 	
 	@Bean
-	public ItemWriter<Ratings> writer() {
+	public ItemWriter<Crew> writer() {
 		return items -> {
-			for(Ratings item: items) {
+			for(Crew item: items) {
 				esRepository.save(item);
 				System.out.println(item);
 			}
@@ -158,7 +160,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 	@Bean
 	public Step slaveStep() {
 		return stepBuilderFactory.get("slaveStep")
-			.<Ratings, Ratings>chunk(250)
+			.<Crew, Crew>chunk(250)
 			.reader(pagingItemReader(null, null))
 			.writer(writer())
 			.build();
