@@ -1,11 +1,10 @@
 package demo.batch.configuration;
 
 import demo.batch.domain.Crew;
-import demo.batch.domain.Ratings;
 import demo.batch.infrastructure.ColumnRangePartitioner;
 import demo.batch.infrastructure.CrewRowMapper;
-import demo.batch.infrastructure.RatingsRowMapper;
 import demo.batch.esrepository.ESRepository;
+import org.springframework.batch.core.ChunkListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -59,6 +58,8 @@ public class BatchConfiguration implements ApplicationContextAware {
 	private ApplicationContext applicationContext;
 	
 	private static final int GRID_SIZE = 8;
+
+	private static final int CHUNK_SIZE = 2000;
 	
 	private static int alreadyread = 0;
 	
@@ -83,7 +84,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 		
 		columnRangePartitioner.setColumn("tconst");
 		columnRangePartitioner.setDataSource(this.dataSource);
-		columnRangePartitioner.setTable("ratings");
+		columnRangePartitioner.setTable("crew");
 		
 		return columnRangePartitioner;
 	}
@@ -119,7 +120,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 		JdbcPagingItemReader<Crew> reader = new JdbcPagingItemReader<>();
 		
 		reader.setDataSource(this.dataSource);
-		reader.setFetchSize(250);
+		reader.setFetchSize(CHUNK_SIZE);
 		reader.setRowMapper(new CrewRowMapper());
 		
 		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
@@ -141,16 +142,13 @@ public class BatchConfiguration implements ApplicationContextAware {
 	@Bean
 	public ItemWriter<Crew> writer() {
 		return items -> {
-			for(Crew item: items) {
-				esRepository.save(item);
-				System.out.println(item);
-			}
+			items.parallelStream().forEach(esRepository::save);
 		};
 	}
 	
 	@Bean
-	public Step step1() throws Exception {
-		return stepBuilderFactory.get("step1")
+	public Step masterStep() throws Exception {
+		return stepBuilderFactory.get("masterStep")
 			.partitioner(slaveStep().getName(), partitioner())
 			.step(slaveStep())
 			.partitionHandler(partitionHandler(null))
@@ -160,7 +158,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 	@Bean
 	public Step slaveStep() {
 		return stepBuilderFactory.get("slaveStep")
-			.<Crew, Crew>chunk(250)
+			.<Crew, Crew>chunk(CHUNK_SIZE)
 			.reader(pagingItemReader(null, null))
 			.writer(writer())
 			.build();
@@ -169,9 +167,9 @@ public class BatchConfiguration implements ApplicationContextAware {
 	@Bean
 	@Profile("master")
 	public Job job() throws Exception {
-		return jobBuilderFactory.get("job1")
+		return jobBuilderFactory.get("job")
 			.incrementer(new RunIdIncrementer())
-			.start(step1())
+			.start(masterStep())
 			.build();
 	}
 	

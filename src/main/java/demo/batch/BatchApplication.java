@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableElasticsearchRepositories(basePackages = "demo.batch.esrepository")
-@EnableJpaRepositories(basePackages = "demo.batch.jparepository")
+@EnableJpaRepositories(basePackages = "demo.batch")
 public class BatchApplication {
 	
 	public static void main(String[] args) {

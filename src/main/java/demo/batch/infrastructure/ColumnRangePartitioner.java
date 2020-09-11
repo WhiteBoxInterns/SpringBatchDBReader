@@ -58,14 +58,14 @@ public class ColumnRangePartitioner implements Partitioner {
 		int chunkSize = targetSize/gridSize + 1;
 
 		Map<String, ExecutionContext> result = new HashMap<String, ExecutionContext>();
-		int number = 0;
+		int partitionId = 0;
 		int start = 0;
 		int end = chunkSize - 1;
 
 
 		while (start < targetSize) {
-			ExecutionContext value = new ExecutionContext();
-			result.put("partition" + number, value);
+			ExecutionContext executionContext = new ExecutionContext();
+			result.put("partition" + partitionId, executionContext);
 			if (end >= targetSize) {
 				end = targetSize - 1;
 			}
@@ -76,11 +76,11 @@ public class ColumnRangePartitioner implements Partitioner {
 			String max = jdbcTemplate.queryForObject("SELECT " + column + " from " + table + " GROUP BY " + column + " LIMIT " +
 					end + ", " + "1", String.class);
 			System.out.println(min + " " + max);
-			value.putString("minValue", min);
-			value.putString("maxValue", max);
+			executionContext.putString("minValue", min);
+			executionContext.putString("maxValue", max);
 			start += chunkSize;
 			end += chunkSize;
-			number++;
+			partitionId++;
 		}
 		System.out.println("ajung aici");
 		return result;
