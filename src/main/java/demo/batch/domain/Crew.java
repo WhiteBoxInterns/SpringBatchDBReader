@@ -51,7 +51,7 @@ public class Crew {
 	}
 	
 	@Column(name = "writers")
-	@Field(name = "numVotes")
+	@Field(name = "writers")
 	public String writers;
 	
 	

@@ -82,7 +82,6 @@ public class ColumnRangePartitioner implements Partitioner {
 			end += chunkSize;
 			number++;
 		}
-		System.out.println("ajung aici");
 		return result;
 	}
 }

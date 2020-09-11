@@ -115,11 +115,11 @@ public class BatchConfiguration implements ApplicationContextAware {
 	public JdbcPagingItemReader<Crew> pagingItemReader(
 		@Value("#{stepExecutionContext['minValue']}") String minValue,
 		@Value("#{stepExecutionContext['maxValue']}") String maxValue) {
-		System.out.println("reading " + minValue + " to " + maxValue + "already read: " + alreadyread);
+		System.out.println("reading " + minValue + " to " + maxValue);
 		JdbcPagingItemReader<Crew> reader = new JdbcPagingItemReader<>();
 		
 		reader.setDataSource(this.dataSource);
-		reader.setFetchSize(250);
+		reader.setFetchSize(2000);
 		reader.setRowMapper(new CrewRowMapper());
 		
 		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
@@ -141,10 +141,9 @@ public class BatchConfiguration implements ApplicationContextAware {
 	@Bean
 	public ItemWriter<Crew> writer() {
 		return items -> {
-			for(Crew item: items) {
+			items.parallelStream().forEach(item -> {
 				esRepository.save(item);
-				System.out.println(item);
-			}
+			});
 		};
 	}
 	
@@ -160,7 +159,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 	@Bean
 	public Step slaveStep() {
 		return stepBuilderFactory.get("slaveStep")
-			.<Crew, Crew>chunk(250)
+			.<Crew, Crew>chunk(2000)
 			.reader(pagingItemReader(null, null))
 			.writer(writer())
 			.build();
