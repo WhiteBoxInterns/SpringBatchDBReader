@@ -1,9 +1,7 @@
 package demo.batch.configuration;
 
-import demo.batch.domain.Crew;
 import demo.batch.domain.Ratings;
 import demo.batch.infrastructure.ColumnRangePartitioner;
-import demo.batch.infrastructure.CrewRowMapper;
 import demo.batch.infrastructure.RatingsRowMapper;
 import demo.batch.esrepository.ESRepository;
 import org.springframework.batch.core.Job;
@@ -83,7 +81,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 		
 		columnRangePartitioner.setColumn("tconst");
 		columnRangePartitioner.setDataSource(this.dataSource);
-		columnRangePartitioner.setTable("crew");
+		columnRangePartitioner.setTable("ratings");
 		
 		return columnRangePartitioner;
 	}
@@ -112,15 +110,15 @@ public class BatchConfiguration implements ApplicationContextAware {
 	
 	@Bean
 	@StepScope
-	public JdbcPagingItemReader<Crew> pagingItemReader(
+	public JdbcPagingItemReader<Ratings> pagingItemReader(
 		@Value("#{stepExecutionContext['minValue']}") String minValue,
 		@Value("#{stepExecutionContext['maxValue']}") String maxValue) {
-		System.out.println("reading " + minValue + " to " + maxValue);
-		JdbcPagingItemReader<Crew> reader = new JdbcPagingItemReader<>();
+		System.out.println("reading " + minValue + " to " + maxValue + "already read: " + alreadyread);
+		JdbcPagingItemReader<Ratings> reader = new JdbcPagingItemReader<>();
 		
 		reader.setDataSource(this.dataSource);
-		reader.setFetchSize(2000);
-		reader.setRowMapper(new CrewRowMapper());
+		reader.setFetchSize(250);
+		reader.setRowMapper(new RatingsRowMapper());
 		
 		MySqlPagingQueryProvider queryProvider = new MySqlPagingQueryProvider();
 		queryProvider.setSelectClause("tconst, writers, directors");
@@ -139,11 +137,12 @@ public class BatchConfiguration implements ApplicationContextAware {
 	}
 	
 	@Bean
-	public ItemWriter<Crew> writer() {
+	public ItemWriter<Ratings> writer() {
 		return items -> {
-			items.parallelStream().forEach(item -> {
+			for(Ratings item: items) {
 				esRepository.save(item);
-			});
+				System.out.println(item);
+			}
 		};
 	}
 	
@@ -159,7 +158,7 @@ public class BatchConfiguration implements ApplicationContextAware {
 	@Bean
 	public Step slaveStep() {
 		return stepBuilderFactory.get("slaveStep")
-			.<Crew, Crew>chunk(2000)
+			.<Ratings, Ratings>chunk(250)
 			.reader(pagingItemReader(null, null))
 			.writer(writer())
 			.build();
